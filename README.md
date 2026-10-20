@@ -47,6 +47,7 @@ The cask removes the Gatekeeper quarantine automatically (the app is ad-hoc sign
 | ⬆️ | **One-click Update CPAMP** | Fetches the latest GitHub Release, swaps the binary (keeps `data/` and `config.json`), restarts |
 | ⚙️ | **Autostart** | Login-item toggle via `SMAppService`, checkmark reflects live state |
 | 🎨 | **Icon switcher** | Line-art (theme-adaptive template) · Color logo · Simple dot · Custom PNG |
+| 🌐 | **UI language** | 中文 / English switch in the menu, applies instantly |
 | 📜 | **Logs** | Opens `launchd.err.log` in Console (⌘L) |
 | 🚪 | **Quit** | Kills only the menu bar; background services keep running (⌘Q) |
 

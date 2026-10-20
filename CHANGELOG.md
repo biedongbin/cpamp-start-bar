@@ -4,6 +4,11 @@ English | [简体中文](CHANGELOG.zh-CN.md)
 
 All notable changes to this project are documented here. Versions follow [SemVer](https://semver.org/).
 
+## [1.2.0] — 2026-10-20
+
+### Added
+- **UI language switching (中文 / English)**: new `Language / 语言` submenu at the top level; instant switch rebuilds the menu in place. Every menu item, status line, tooltip and notification is bilingual. Preference persisted in `UserDefaults`.
+
 ## [1.1.1] — 2026-10-20
 
 ### Changed

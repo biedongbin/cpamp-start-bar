@@ -47,6 +47,7 @@ cask 已自动解除 Gatekeeper 隔离（app 为 ad-hoc 签名，无 Apple Devel
 | ⬆️ | **一键 Update CPAMP** | 拉取最新 GitHub Release 替换二进制（保留 `data/` 与 `config.json`），自动重启 |
 | ⚙️ | **开机自启** | SMAppService 登录项开关，勾选态实时显示 |
 | 🎨 | **菜单栏图标** | 线条版（随主题变色）· 彩色 logo · 简约圆点 · 自定义 PNG |
+| 🌐 | **界面语言** | 中文 / English 菜单内即时切换 |
 | 📜 | **查看日志** | Console 打开 `launchd.err.log`（⌘L） |
 | 🚪 | **退出** | 只关菜单栏进程，后台服务继续跑（⌘Q） |
 
