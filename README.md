@@ -30,6 +30,8 @@ You run CPA on `:8317` and the CPAMP Manager Server on `:18317`. Opening a brows
 brew install --cask biedongbin/tap/cpampbar
 ```
 
+> Cask lives in the [biedongbin/homebrew-tap](https://github.com/biedongbin/homebrew-tap) repository (`Casks/cpampbar.rb`), with sha256 checksum, `livecheck` and a postflight that removes the Gatekeeper quarantine.
+
 The cask removes the Gatekeeper quarantine automatically (the app is ad-hoc signed; no Apple Developer ID). Upgrades via `brew upgrade --cask cpampbar` once a new release ships — or just use the in-app **Update** items for CPA/CPAMP.
 
 **Manual:** download `CpampBar.app.zip` from [Releases](https://github.com/biedongbin/cpamp-start-bar/releases/latest), unzip, drop into `~/Applications`. Because the app is ad-hoc signed, macOS may ask you to approve it on first launch: right-click the app → **Open**, or allow it in **System Settings → Privacy & Security**.

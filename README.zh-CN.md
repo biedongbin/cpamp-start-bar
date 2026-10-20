@@ -30,6 +30,8 @@
 brew install --cask biedongbin/tap/cpampbar
 ```
 
+> cask 配方存放在 [biedongbin/homebrew-tap](https://github.com/biedongbin/homebrew-tap) 仓库（`Casks/cpampbar.rb`），含 sha256 校验、`livecheck` 自动追踪新版，并已在 postflight 中自动解除 Gatekeeper 隔离。
+
 cask 已自动解除 Gatekeeper 隔离（app 为 ad-hoc 签名，无 Apple Developer ID）。发新版后 `brew upgrade --cask cpampbar` 升级——或直接用 app 内的「一键 Update」更新 CPA/CPAMP。
 
 **手动安装：**从 [Releases](https://github.com/biedongbin/cpamp-start-bar/releases/latest) 下载 `CpampBar.app.zip`，解压拖进 `~/Applications`。app 为 ad-hoc 签名，macOS 首次打开可能要求放行：右键 app → **打开**，或在 **系统设置 → 隐私与安全性** 里允许。
