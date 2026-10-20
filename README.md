@@ -1,23 +1,33 @@
-# CpampBar — CPAMP 菜单栏状态图标
+# CpampBar — CPAMP 菜单栏管家
 
 [CPA / CLIProxyAPI](https://github.com/router-for-me/CLIProxyAPI) + [CPAMP (CPA-Manager-Plus)](https://github.com/seakee/CPA-Manager-Plus) 的 macOS 菜单栏伴侣。单文件 Swift，零第三方依赖。
+
+## 下载安装
+
+从 [Releases](https://github.com/biedongbin/cpamp-start-bar/releases/latest) 下载 `CpampBar.app.zip`，解压拖到 `~/Applications`（或 `/Applications`），双击运行。
 
 ## 功能
 
 | 能力 | 说明 |
 |---|---|
-| 状态图标 | 每 10 秒轮询 CPAMP `:18317/health`；健康=彩色 logo，异常=灰色禁用态 |
+| 状态图标 | 每 10 秒轮询 CPAMP `:18317/health`；健康=正常图标，异常=半透明禁用态 |
 | 打开 CPAMP 面板 | `http://127.0.0.1:18317/management.html`（⌘1） |
 | 打开 CPA 面板 | `http://127.0.0.1:8317/management.html`（⌘2） |
-| 重启 CPAMP | `launchctl kickstart -k`（⌘R），适配 launchd 托管的 CPAMP |
+| 重启 CPA 内核 | `launchctl kickstart` brew 服务 `sh.brew.cliproxyapi` |
+| 重启 CPAMP | `launchctl kickstart`（⌘R），适配 launchd 托管的 CPAMP |
+| 重启 CPA + CPAMP | 一键双重启 |
+| 一键 Update CPA | `brew upgrade cliproxyapi` + 自动重启，完成弹通知 |
+| 一键 Update CPAMP | 拉取最新 Release 替换二进制（保留 data 与配置）+ 自动重启 |
+| 设置 · 开机自启 | SMAppService 登录项开关（勾选态实时显示） |
+| 设置 · 更换图标 | 线条版（随主题变色）/ 彩色 logo / 简约圆点 / 自定义 PNG |
 | 查看日志 | Console 打开 `launchd.err.log`（⌘L） |
 | 退出 | 只关菜单栏进程，后台服务不受影响（⌘Q） |
 
-图标取自 CPAMP 官方 logo（去背景、透明通道）。
+线条版图标取自 CPAMP 官方 logo（去背景描边化，template 模式随深浅主题自动变色）。
 
 ## 环境要求
 
-- macOS 12+（Apple Silicon / Intel）
+- macOS 13+（Apple Silicon / Intel，SMAppService 自启需要）
 - CPA 运行在 `:8317`，CPAMP Manager Server 运行在 `:18317`
 - CPAMP 由 launchd 托管（Label：`com.seakee.cpa-manager-plus`）
 

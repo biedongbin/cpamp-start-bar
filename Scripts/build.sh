@@ -12,7 +12,7 @@ echo "[1/4] 编译 Swift…"
 swiftc -O -o "$APP/Contents/MacOS/CpampBar" Sources/CpampBar.swift
 
 echo "[2/4] 拷贝资源…"
-cp Resources/icon-menubar*.png "$APP/Contents/Resources/"
+cp Resources/icon-style-*.png "$APP/Contents/Resources/"
 cp Resources/Info.plist "$APP/Contents/"
 
 echo "[3/4] ad-hoc 签名…"
