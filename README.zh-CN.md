@@ -22,6 +22,18 @@
 
 **CpampBar 把这些收进一个菜单。** 菜单栏图标实时反映健康（每 10 秒刷新），重启按钮、一键更新、开机自启、换图标。一个约 100 KB 的 app，无 Electron，后台只有一个 `Timer`。
 
+## 安装
+
+**Homebrew（推荐）：**
+
+```bash
+brew install --cask biedongbin/tap/cpampbar
+```
+
+cask 已自动解除 Gatekeeper 隔离（app 为 ad-hoc 签名，无 Apple Developer ID）。发新版后 `brew upgrade --cask cpampbar` 升级——或直接用 app 内的「一键 Update」更新 CPA/CPAMP。
+
+**手动安装：**从 [Releases](https://github.com/biedongbin/cpamp-start-bar/releases/latest) 下载 `CpampBar.app.zip`，解压拖进 `~/Applications`。app 为 ad-hoc 签名，macOS 首次打开可能要求放行：右键 app → **打开**，或在 **系统设置 → 隐私与安全性** 里允许。
+
 ## 功能
 
 | | 功能 | 说明 |
@@ -58,10 +70,6 @@ open build/CpampBar.app
 ```bash
 swiftc -O -o CpampBar Sources/CpampBar.swift
 ```
-
-## 安装
-
-从 [Releases](https://github.com/biedongbin/cpamp-start-bar/releases/latest) 下载 `CpampBar.app.zip`，解压拖进 `~/Applications`，双击运行。开机自启在菜单里勾选「开机自启」即可（SMAppService）。
 
 ## 自定义端口与路径
 

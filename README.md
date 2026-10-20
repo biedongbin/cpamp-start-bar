@@ -22,6 +22,18 @@ You run CPA on `:8317` and the CPAMP Manager Server on `:18317`. Opening a brows
 
 **CpampBar puts it in one menu.** Health state on the menu bar icon (refreshed every 10 s), restart buttons, one-click updates, autostart and icon switching. One ~100 KB app, no Electron, no background daemons beyond one `Timer`.
 
+## Install
+
+**Homebrew (recommended):**
+
+```bash
+brew install --cask biedongbin/tap/cpampbar
+```
+
+The cask removes the Gatekeeper quarantine automatically (the app is ad-hoc signed; no Apple Developer ID). Upgrades via `brew upgrade --cask cpampbar` once a new release ships — or just use the in-app **Update** items for CPA/CPAMP.
+
+**Manual:** download `CpampBar.app.zip` from [Releases](https://github.com/biedongbin/cpamp-start-bar/releases/latest), unzip, drop into `~/Applications`. Because the app is ad-hoc signed, macOS may ask you to approve it on first launch: right-click the app → **Open**, or allow it in **System Settings → Privacy & Security**.
+
 ## Features
 
 | | Feature | Details |
@@ -58,10 +70,6 @@ Or bare binary (menu bar image needs the `.app` bundle resources):
 ```bash
 swiftc -O -o CpampBar Sources/CpampBar.swift
 ```
-
-## Install
-
-Download `CpampBar.app.zip` from [Releases](https://github.com/biedongbin/cpamp-start-bar/releases/latest), unzip, drop into `~/Applications`, double-click. For autostart, toggle **开机自启** in the menu (uses SMAppService).
 
 ## Customizing endpoints
 
