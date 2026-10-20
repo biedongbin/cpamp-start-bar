@@ -105,6 +105,32 @@ let cpampDir   = "~/cpamp/cpamp"                     // 一键更新用
 - 与 [CLIProxyAPI](https://github.com/router-for-me/CLIProxyAPI)、[CPA-Manager-Plus](https://github.com/seakee/CPA-Manager-Plus) 无隶属关系，CPAMP logo 版权归其项目所有。
 - 版本历史见 [CHANGELOG.zh-CN.md](CHANGELOG.zh-CN.md)。English docs: [README.md](README.md)。
 
+## 致谢
+
+- [Linux.do](https://linux.do) — 社区
+- [CLIProxyAPI](https://github.com/router-for-me/CLIProxyAPI) — CpampBar 所管理的代理内核
+- [CPA-Manager-Plus](https://github.com/seakee/CPA-Manager-Plus) — 管理面板服务端，CPAMP logo 版权归其项目所有
+
 ## License
 
 [MIT](LICENSE)
+
+## ⭐ Star History
+
+若此项目对你有帮助，请给它一个 ⭐ —— 这是我们持续改进的动力。
+
+<p align="center">
+  <img src="https://img.shields.io/github/stars/biedongbin/cpamp-start-bar?style=for-the-badge&logo=github&color=gold" alt="GitHub Stars">
+  <img src="https://img.shields.io/github/forks/biedongbin/cpamp-start-bar?style=for-the-badge&logo=github" alt="GitHub Forks">
+  <img src="https://img.shields.io/github/watchers/biedongbin/cpamp-start-bar?style=for-the-badge&logo=github" alt="GitHub Watchers">
+</p>
+
+<div align="center">
+  <a href="https://www.star-history.com/#biedongbin/cpamp-start-bar&Date">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=biedongbin/cpamp-start-bar&type=Date&theme=dark" />
+      <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=biedongbin/cpamp-start-bar&type=Date" />
+      <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=biedongbin/cpamp-start-bar&type=Date" width="760" />
+    </picture>
+  </a>
+</div>
