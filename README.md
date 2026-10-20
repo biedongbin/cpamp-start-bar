@@ -1,37 +1,48 @@
-# CpampBar — CPAMP 菜单栏管家
+<p align="center">
+  <img src="Resources/icon-style-color@3x.png" width="96" alt="CpampBar">
+</p>
 
-[CPA / CLIProxyAPI](https://github.com/router-for-me/CLIProxyAPI) + [CPAMP (CPA-Manager-Plus)](https://github.com/seakee/CPA-Manager-Plus) 的 macOS 菜单栏伴侣。单文件 Swift，零第三方依赖。
+<h1 align="center">CpampBar</h1>
 
-## 下载安装
+<p align="center">
+  <a href="README.zh-CN.md"><img src="https://img.shields.io/badge/%F0%9F%8C%90_%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-阅读中文版-red?style=for-the-badge" alt="简体中文"></a>
+  <img src="https://img.shields.io/badge/version-1.1.1-blue?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/platform-macOS%2013%2B-lightgrey?style=flat-square" alt="macOS 13+">
+  <img src="https://img.shields.io/badge/license-MIT-orange?style=flat-square" alt="MIT">
+</p>
 
-从 [Releases](https://github.com/biedongbin/cpamp-start-bar/releases/latest) 下载 `CpampBar.app.zip`，解压拖到 `~/Applications`（或 `/Applications`），双击运行。
+> **A single-file Swift menu bar companion for [CPA / CLIProxyAPI](https://github.com/router-for-me/CLIProxyAPI) and [CPAMP (CPA-Manager-Plus)](https://github.com/seakee/CPA-Manager-Plus).**
+> Health at a glance, restart either core, one-click updates — right from your menu bar. Zero third-party dependencies.
 
-## 功能
+---
 
-| 能力 | 说明 |
-|---|---|
-| 状态图标 | 每 10 秒轮询 CPAMP `:18317/health`；健康=正常图标，异常=半透明禁用态 |
-| 打开 CPAMP 面板 | `http://127.0.0.1:18317/management.html`（⌘1） |
-| 打开 CPA 面板 | `http://127.0.0.1:8317/management.html`（⌘2） |
-| 重启 CPA 内核 | `launchctl kickstart` brew 服务 `sh.brew.cliproxyapi` |
-| 重启 CPAMP | `launchctl kickstart`（⌘R），适配 launchd 托管的 CPAMP |
-| 重启 CPA + CPAMP | 一键双重启 |
-| 一键 Update CPA | `brew upgrade cliproxyapi` + 自动重启，完成弹通知 |
-| 一键 Update CPAMP | 拉取最新 Release 替换二进制（保留 data 与配置）+ 自动重启 |
-| 设置 · 开机自启 | SMAppService 登录项开关（勾选态实时显示） |
-| 设置 · 更换图标 | 线条版（随主题变色）/ 彩色 logo / 简约圆点 / 自定义 PNG |
-| 查看日志 | Console 打开 `launchd.err.log`（⌘L） |
-| 退出 | 只关菜单栏进程，后台服务不受影响（⌘Q） |
+## The 10-second pitch
 
-线条版图标取自 CPAMP 官方 logo（去背景描边化，template 模式随深浅主题自动变色）。
+You run CPA on `:8317` and the CPAMP Manager Server on `:18317`. Opening a browser to check health, restarting services from the terminal, updating via brew and release downloads — all of it scattered.
 
-## 环境要求
+**CpampBar puts it in one menu.** Health state on the menu bar icon (refreshed every 10 s), restart buttons, one-click updates, autostart and icon switching. One ~100 KB app, no Electron, no background daemons beyond one `Timer`.
 
-- macOS 13+（Apple Silicon / Intel，SMAppService 自启需要）
-- CPA 运行在 `:8317`，CPAMP Manager Server 运行在 `:18317`
-- CPAMP 由 launchd 托管（Label：`com.seakee.cpa-manager-plus`）
+## Features
 
-## 构建
+| | Feature | Details |
+|---|---|---|
+| 🟢 | **Health icon** | Polls CPAMP `:18317/health` every 10 s; healthy = normal icon, down = dimmed |
+| 🌐 | **Open panels** | CPAMP `:18317` (⌘1) · CPA `:8317` (⌘2) |
+| 🔄 | **Restart** | CPA kernel · CPAMP · both — via `launchctl kickstart` |
+| ⬆️ | **One-click Update CPA** | `brew upgrade cliproxyapi` + auto restart + system notification |
+| ⬆️ | **One-click Update CPAMP** | Fetches the latest GitHub Release, swaps the binary (keeps `data/` and `config.json`), restarts |
+| ⚙️ | **Autostart** | Login-item toggle via `SMAppService`, checkmark reflects live state |
+| 🎨 | **Icon switcher** | Line-art (theme-adaptive template) · Color logo · Simple dot · Custom PNG |
+| 📜 | **Logs** | Opens `launchd.err.log` in Console (⌘L) |
+| 🚪 | **Quit** | Kills only the menu bar; background services keep running (⌘Q) |
+
+## Requirements
+
+- macOS 13+ (Apple Silicon / Intel)
+- CPA running on `:8317` (Homebrew service), CPAMP Manager Server on `:18317` under launchd label `com.seakee.cpa-manager-plus`
+- CPAMP installed at `~/cpamp/cpamp` (for the one-click update path)
+
+## Build
 
 ```bash
 git clone https://github.com/biedongbin/cpamp-start-bar
@@ -40,48 +51,49 @@ cd cpamp-start-bar
 open build/CpampBar.app
 ```
 
-或只要二进制：
+Single command chain behind the script: `swiftc` → bundle → ad-hoc codesign.
+
+Or bare binary (menu bar image needs the `.app` bundle resources):
 
 ```bash
 swiftc -O -o CpampBar Sources/CpampBar.swift
 ```
 
-（图标资源在 `.app` 打包后生效；裸跑二进制时菜单栏不显示图片。）
+## Install
 
-## 开机自启
+Download `CpampBar.app.zip` from [Releases](https://github.com/biedongbin/cpamp-start-bar/releases/latest), unzip, drop into `~/Applications`, double-click. For autostart, toggle **开机自启** in the menu (uses SMAppService).
 
-系统设置 → 通用 → 登录项 添加 `CpampBar.app`，或：
+## Customizing endpoints
 
-```bash
-osascript -e 'tell application "System Events" to make login item at end with properties {path:"/path/to/CpampBar.app", hidden:true}'
-```
-
-## 自定义端口/路径
-
-改 `Sources/CpampBar.swift` 顶部常量后重新编译：
+All constants live at the top of `Sources/CpampBar.swift`:
 
 ```swift
-let cpampURL  = "http://127.0.0.1:18317/management.html"
-let cpaURL    = "http://127.0.0.1:8317/management.html"
-let healthURL = "http://127.0.0.1:18317/health"
+let cpampPanel = "http://127.0.0.1:18317/management.html"
+let cpaPanel   = "http://127.0.0.1:8317/management.html"
+let cpaLabel   = "sh.brew.cliproxyapi"               // brew service label
+let cpampLabel = "com.seakee.cpa-manager-plus"       // CPAMP LaunchAgent label
+let cpampDir   = "~/cpamp/cpamp"                     // for one-click update
 ```
 
-## 目录结构
+Edit, then `./Scripts/build.sh`.
+
+## Directory layout
 
 ```
-├── Sources/CpampBar.swift    # 全部逻辑（单文件）
+├── Sources/CpampBar.swift     # All logic, single file
 ├── Resources/
-│   ├── icon-menubar*.png     # 菜单栏图标 1x/2x/3x
-│   ├── cpamp-mark.svg        # 图标矢量源
-│   └── Info.plist            # LSUIElement=true（不占 Dock）
-└── Scripts/build.sh          # 编译 + 打包 .app + ad-hoc 签名
+│   ├── icon-style-line*.png   # Menu bar icon, line-art template (1x/2x/3x)
+│   ├── icon-style-color*.png  # Menu bar icon, full-color logo
+│   └── Info.plist             # LSUIElement=true (no Dock icon)
+└── Scripts/build.sh           # Compile + bundle + ad-hoc sign
 ```
 
-## 说明
+## Notes
 
-- 本项目是 macOS 菜单栏 app，不是 CPA 插件——CPA 插件市场只接受 Go/C/Rust 动态库（C ABI），两者架构不同。
-- 与 [CLIProxyAPI](https://github.com/router-for-me/CLIProxyAPI) 和 [CPA-Manager-Plus](https://github.com/seakee/CPA-Manager-Plus) 无隶属关系，logo 版权归 CPAMP 项目所有。
+- This is a **macOS menu bar app, not a CPA plugin**. The CPA plugin marketplace accepts only Go/C/Rust dynamic libraries (C ABI) that run inside the CPA process — they cannot restart/update their own host, and cannot create a menu bar. Different layer, by design.
+- Not affiliated with [CLIProxyAPI](https://github.com/router-for-me/CLIProxyAPI) or [CPA-Manager-Plus](https://github.com/seakee/CPA-Manager-Plus). The CPAMP logo belongs to its project.
+- See [CHANGELOG.md](CHANGELOG.md) for version history. 简体中文说明见 [README.zh-CN.md](README.zh-CN.md)。
 
 ## License
 
-MIT
+[MIT](LICENSE)

@@ -17,6 +17,7 @@ let cpaLabel = "sh.brew.cliproxyapi"                    // brew 服务 label
 let cpampLabel = "com.seakee.cpa-manager-plus"          // CPAMP LaunchAgent label
 let cpampPlist = ("~/Library/LaunchAgents/" + cpampLabel + ".plist") as NSString
 let cpampDir = ("~/cpamp/cpamp" as NSString).expandingTildeInPath
+let logPath = ("~/cpamp/cpamp/logs/launchd.err.log" as NSString).expandingTildeInPath
 let cpampReleaseAPI = "https://api.github.com/repos/seakee/CPA-Manager-Plus/releases/latest"
 let brewBin = "/opt/homebrew/bin/brew"
 
@@ -128,12 +129,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(withTitle: "一键 Update CPAMP（release）", action: #selector(updateCpamp), keyEquivalent: "").target = self
         menu.addItem(.separator())
 
-        // 设置
-        let settings = menu.addItem(withTitle: "设置", action: nil, keyEquivalent: "")
-        let sub = NSMenu()
-        autostartItem = sub.addItem(withTitle: "开机自启", action: #selector(toggleAutostart), keyEquivalent: "")
+        // 开机自启 + 图标切换（顶层直达）
+        autostartItem = menu.addItem(withTitle: "开机自启", action: #selector(toggleAutostart), keyEquivalent: "")
         autostartItem.target = self
-        let iconItem = sub.addItem(withTitle: "菜单栏图标", action: nil, keyEquivalent: "")
+        let iconItem = menu.addItem(withTitle: "菜单栏图标", action: nil, keyEquivalent: "")
         let iconSub = NSMenu()
         for style in [IconStyle.line, .color, .dot, .custom] {
             let it = iconSub.addItem(withTitle: style.label, action: #selector(pickIconStyle(_:)), keyEquivalent: "")
@@ -144,9 +143,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         iconSub.addItem(.separator())
         iconSub.addItem(withTitle: "从文件选择…", action: #selector(chooseCustomIcon), keyEquivalent: "").target = self
         iconItem.submenu = iconSub
-        settings.submenu = sub
         menu.addItem(.separator())
 
+        menu.addItem(withTitle: "查看日志", action: #selector(openLog), keyEquivalent: "l").target = self
+        menu.addItem(.separator())
         menu.addItem(withTitle: "退出菜单栏（服务继续运行）", action: #selector(quit), keyEquivalent: "q").target = self
         statusItem.menu = menu
     }
@@ -201,6 +201,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: 面板
     @objc func openCpamp() { run("/usr/bin/open", [cpampPanel]) }
     @objc func openCpa() { run("/usr/bin/open", [cpaPanel]) }
+    @objc func openLog() { run("/usr/bin/open", ["-a", "Console", logPath]) }
 
     // MARK: 重启
     @objc func restartCpa() {
