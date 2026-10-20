@@ -1,7 +1,6 @@
 # CpampBar 交接文档（HANDOFF）
 
-> 供后续会话在 `~/workspace/github/cpampstartbar` 目录恢复上下文用。
-> ⚠️ 实际磁盘路径是 `~/workspace/github/cpamp-start-bar`（带连字符），`cpampstartbar` 是指向它的符号链接。
+> 供后续会话在 `~/workspace/github/cpamp-start-bar` 目录恢复上下文用。
 
 最后更新：2026-10-20 · 项目版本 v1.2.0
 
@@ -88,7 +87,7 @@ cd ~/workspace/github/homebrew-tap && git add -A && git commit -m "cpampbar X.Y.
 ## 6. 目录结构
 
 ```
-~/workspace/github/cpamp-start-bar/     # 主项目（cpampstartbar 是它的 symlink）
+~/workspace/github/cpamp-start-bar/     # 主项目
 ├── Sources/CpampBar.swift              # 全部逻辑（双语、更新、重启、图标切换）
 ├── Resources/
 │   ├── Info.plist                      # 版本号在这里（CFBundleShortVersionString）
