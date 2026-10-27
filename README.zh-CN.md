@@ -6,7 +6,7 @@
 
 <p align="center">
   <a href="README.md"><img src="https://img.shields.io/badge/%F0%9F%8C%90_English-Read_in_English-blue?style=for-the-badge" alt="English"></a>
-  <img src="https://img.shields.io/badge/version-1.1.1-blue?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.3.0-blue?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/platform-macOS%2013%2B-lightgrey?style=flat-square" alt="macOS 13+">
   <img src="https://img.shields.io/badge/license-MIT-orange?style=flat-square" alt="MIT">
 </p>
@@ -45,6 +45,7 @@ cask 已自动解除 Gatekeeper 隔离（app 为 ad-hoc 签名，无 Apple Devel
 | 🔄 | **重启** | CPA 内核 · CPAMP · 双重启——`launchctl kickstart` 实现 |
 | ⬆️ | **一键 Update CPA** | `brew upgrade cliproxyapi` + 自动重启 + 系统通知 |
 | ⬆️ | **一键 Update CPAMP** | 拉取最新 GitHub Release 替换二进制（保留 `data/` 与 `config.json`），自动重启 |
+| ⚙️ | **设置（⌘,）** | 一个对话框改完 CPAMP/CPA 地址、安装目录、服务 Label——自定义端口免重编译 |
 | ⚙️ | **开机自启** | SMAppService 登录项开关，勾选态实时显示 |
 | 🎨 | **菜单栏图标** | 线条版（随主题变色）· 彩色 logo · 简约圆点 · 自定义 PNG |
 | 🌐 | **界面语言** | 中文 / English 菜单内即时切换 |
@@ -54,8 +55,8 @@ cask 已自动解除 Gatekeeper 隔离（app 为 ad-hoc 签名，无 Apple Devel
 ## 环境要求
 
 - macOS 13+（Apple Silicon / Intel）
-- CPA 跑在 `:8317`（Homebrew 服务），CPAMP Manager Server 跑在 `:18317`（launchd label `com.seakee.cpa-manager-plus`）
-- CPAMP 安装在 `~/cpamp/cpamp`（一键更新路径依赖）
+- CPA 跑在 `:8317`（Homebrew 服务）、CPAMP Manager Server 跑在 `:18317`——两者均可在「设置…」中修改
+- CPAMP 安装在 `~/cpamp/cpamp`（一键更新路径依赖，同样可改）
 
 ## 构建
 
@@ -76,17 +77,19 @@ swiftc -O -o CpampBar Sources/CpampBar.swift
 
 ## 自定义端口与路径
 
-常量集中在 `Sources/CpampBar.swift` 顶部：
+菜单里点 **设置…（⌘,）**，一个对话框改完全部配置，无需重新编译：
 
-```swift
-let cpampPanel = "http://127.0.0.1:18317/management.html"
-let cpaPanel   = "http://127.0.0.1:8317/management.html"
-let cpaLabel   = "sh.brew.cliproxyapi"               // brew 服务 label
-let cpampLabel = "com.seakee.cpa-manager-plus"       // CPAMP LaunchAgent label
-let cpampDir   = "~/cpamp/cpamp"                     // 一键更新用
-```
+| 字段 | 默认值 | 说明 |
+|---|---|---|
+| CPAMP 地址 | `http://127.0.0.1:18317` | 面板 URL + `/health` 健康检测；`http://` 可省略 |
+| CPA 地址 | `http://127.0.0.1:8317` | 面板 URL |
+| CPAMP 安装目录 | `~/cpamp/cpamp` | 一键 Update CPAMP 用 |
+| CPAMP 服务 Label | `com.seakee.cpa-manager-plus` | 对应 `~/Library/LaunchAgents/<label>.plist` |
+| CPA 服务 Label | `sh.brew.cliproxyapi` | Homebrew 服务 label |
 
-改完 `./Scripts/build.sh` 重新构建。
+字段留空即用默认值；「恢复默认」按钮清空全部覆盖项。覆盖值存于 `UserDefaults`（`~/Library/Preferences/com.biedongbin.cpampbar.plist`）。
+
+默认值仍是 `Sources/CpampBar.swift` 顶部的常量（`defaultCpampBase`、`defaultCpaBase` 等），若要改出厂基线则改这些常量后 `./Scripts/build.sh` 重新构建。
 
 ## 目录结构
 

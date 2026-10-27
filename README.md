@@ -6,7 +6,7 @@
 
 <p align="center">
   <a href="README.zh-CN.md"><img src="https://img.shields.io/badge/%F0%9F%8C%90_%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87-阅读中文版-red?style=for-the-badge" alt="简体中文"></a>
-  <img src="https://img.shields.io/badge/version-1.1.1-blue?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.3.0-blue?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/platform-macOS%2013%2B-lightgrey?style=flat-square" alt="macOS 13+">
   <img src="https://img.shields.io/badge/license-MIT-orange?style=flat-square" alt="MIT">
 </p>
@@ -45,6 +45,7 @@ The cask removes the Gatekeeper quarantine automatically (the app is ad-hoc sign
 | 🔄 | **Restart** | CPA kernel · CPAMP · both — via `launchctl kickstart` |
 | ⬆️ | **One-click Update CPA** | `brew upgrade cliproxyapi` + auto restart + system notification |
 | ⬆️ | **One-click Update CPAMP** | Fetches the latest GitHub Release, swaps the binary (keeps `data/` and `config.json`), restarts |
+| ⚙️ | **Settings (⌘,)** | One dialog edits CPAMP/CPA addresses, install dir and service labels — custom ports, no rebuild |
 | ⚙️ | **Autostart** | Login-item toggle via `SMAppService`, checkmark reflects live state |
 | 🎨 | **Icon switcher** | Line-art (theme-adaptive template) · Color logo · Simple dot · Custom PNG |
 | 🌐 | **UI language** | 中文 / English switch in the menu, applies instantly |
@@ -54,8 +55,8 @@ The cask removes the Gatekeeper quarantine automatically (the app is ad-hoc sign
 ## Requirements
 
 - macOS 13+ (Apple Silicon / Intel)
-- CPA running on `:8317` (Homebrew service), CPAMP Manager Server on `:18317` under launchd label `com.seakee.cpa-manager-plus`
-- CPAMP installed at `~/cpamp/cpamp` (for the one-click update path)
+- CPA on `:8317` (Homebrew service) and CPAMP Manager Server on `:18317` — both configurable in **Settings…**
+- CPAMP installed at `~/cpamp/cpamp` (for the one-click update path; also configurable)
 
 ## Build
 
@@ -76,17 +77,19 @@ swiftc -O -o CpampBar Sources/CpampBar.swift
 
 ## Customizing endpoints
 
-All constants live at the top of `Sources/CpampBar.swift`:
+Pick **Settings… (⌘,)** from the menu. One dialog edits everything at once — no rebuild needed:
 
-```swift
-let cpampPanel = "http://127.0.0.1:18317/management.html"
-let cpaPanel   = "http://127.0.0.1:8317/management.html"
-let cpaLabel   = "sh.brew.cliproxyapi"               // brew service label
-let cpampLabel = "com.seakee.cpa-manager-plus"       // CPAMP LaunchAgent label
-let cpampDir   = "~/cpamp/cpamp"                     // for one-click update
-```
+| Field | Default | Notes |
+|---|---|---|
+| CPAMP address | `http://127.0.0.1:18317` | Panel URL + `/health` probe; `http://` may be omitted |
+| CPA address | `http://127.0.0.1:8317` | Panel URL |
+| CPAMP install dir | `~/cpamp/cpamp` | Used by one-click Update CPAMP |
+| CPAMP service label | `com.seakee.cpa-manager-plus` | `~/Library/LaunchAgents/<label>.plist` |
+| CPA service label | `sh.brew.cliproxyapi` | Homebrew service label |
 
-Edit, then `./Scripts/build.sh`.
+Leave a field empty to use its default. **Reset Defaults** clears all overrides. Overrides persist in `UserDefaults` (`~/Library/Preferences/com.biedongbin.cpampbar.plist`).
+
+The defaults still live as constants at the top of `Sources/CpampBar.swift` (`defaultCpampBase`, `defaultCpaBase`, …) if you'd rather change the shipped baseline; rebuild with `./Scripts/build.sh`.
 
 ## Directory layout
 
