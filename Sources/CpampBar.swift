@@ -10,17 +10,55 @@
 import Cocoa
 import ServiceManagement
 
-// MARK: - 常量（按需改这里）
-let cpampPanel = "http://127.0.0.1:18317/management.html"
-let cpaPanel = "http://127.0.0.1:8317/management.html"
-let healthURL = "http://127.0.0.1:18317/health"
-let cpaLabel = "sh.brew.cliproxyapi"                    // brew 服务 label
-let cpampLabel = "com.seakee.cpa-manager-plus"          // CPAMP LaunchAgent label
-let cpampPlist = ("~/Library/LaunchAgents/" + cpampLabel + ".plist") as NSString
-let cpampDir = ("~/cpamp/cpamp" as NSString).expandingTildeInPath
-let logPath = ("~/cpamp/cpamp/logs/launchd.err.log" as NSString).expandingTildeInPath
+// MARK: - 默认值（可被「设置」里的自定义值覆盖，存 UserDefaults）
+let defaultCpampBase = "http://127.0.0.1:18317"
+let defaultCpaBase = "http://127.0.0.1:8317"
+let defaultCpampLabel = "com.seakee.cpa-manager-plus"   // CPAMP LaunchAgent label
+let defaultCpaLabel = "sh.brew.cliproxyapi"             // brew 服务 label
+let defaultCpampDir = "~/cpamp/cpamp"                   // 一键更新替换二进制的目录
+
+let kCpampBase = "CpampBaseURL"
+let kCpaBase = "CpaBaseURL"
+let kCpampLabel = "CpampServiceLabel"
+let kCpaLabel = "CpaServiceLabel"
+let kCpampDir = "CpampInstallDir"
+
 let cpampReleaseAPI = "https://api.github.com/repos/seakee/CPA-Manager-Plus/releases/latest"
 let brewBin = "/opt/homebrew/bin/brew"
+
+func stored(_ key: String) -> String? {
+    let s = UserDefaults.standard.string(forKey: key)?.trimmingCharacters(in: .whitespaces) ?? ""
+    return s.isEmpty ? nil : s
+}
+
+/// 归一化 URL：补 http://、去掉 /management.html 与尾部 /；非法返回 nil
+func normalizeBase(_ raw: String) -> String? {
+    var s = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !s.isEmpty else { return nil }
+    if !s.contains("://") { s = "http://" + s }
+    let suffix = "/management.html"
+    if s.hasSuffix(suffix) { s = String(s.dropLast(suffix.count)) }
+    while s.hasSuffix("/") { s.removeLast() }
+    guard let u = URL(string: s), u.scheme != nil, u.host != nil else { return nil }
+    return s
+}
+
+var cpampBase: String { stored(kCpampBase).flatMap(normalizeBase) ?? defaultCpampBase }
+var cpaBase: String { stored(kCpaBase).flatMap(normalizeBase) ?? defaultCpaBase }
+var cpampPanel: String { cpampBase + "/management.html" }
+var cpaPanel: String { cpaBase + "/management.html" }
+var healthURL: String { cpampBase + "/health" }
+var cpaLabel: String { stored(kCpaLabel) ?? defaultCpaLabel }
+var cpampLabel: String { stored(kCpampLabel) ?? defaultCpampLabel }
+var cpampDir: String { ((stored(kCpampDir) ?? defaultCpampDir) as NSString).expandingTildeInPath }
+var cpampPlist: String { (("~/Library/LaunchAgents/" + cpampLabel + ".plist") as NSString).expandingTildeInPath }
+var logPath: String { cpampDir + "/logs/launchd.err.log" }
+
+/// host:port 展示串
+func hostPort(_ base: String) -> String {
+    guard let u = URL(string: base), let h = u.host else { return base }
+    return u.port.map { "\(h):\($0)" } ?? h
+}
 
 // MARK: - 语言
 enum Lang: String {
@@ -149,9 +187,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(withTitle: L("一键 Update CPAMP（release）", "Update CPAMP (release)"), action: #selector(updateCpamp), keyEquivalent: "").target = self
         menu.addItem(.separator())
 
-        // 开机自启 + 图标 + 语言（顶层直达）
+        // 开机自启 + 设置 + 图标 + 语言（顶层直达）
         autostartItem = menu.addItem(withTitle: L("开机自启", "Launch at Login"), action: #selector(toggleAutostart), keyEquivalent: "")
         autostartItem.target = self
+        let settingsItem = menu.addItem(withTitle: L("设置…", "Settings…"), action: nil, keyEquivalent: "")
+        let settingsSub = NSMenu()
+        let settings: [(String, Selector)] = [
+            (L("CPAMP 地址…", "CPAMP Address…"), #selector(editCpampBase)),
+            (L("CPA 地址…", "CPA Address…"), #selector(editCpaBase)),
+            (L("CPAMP 安装目录…", "CPAMP Install Dir…"), #selector(editCpampDir)),
+            (L("CPAMP 服务 Label…", "CPAMP Service Label…"), #selector(editCpampLabel)),
+            (L("CPA 服务 Label…", "CPA Service Label…"), #selector(editCpaLabel)),
+        ]
+        for (title, action) in settings {
+            settingsSub.addItem(withTitle: title, action: action, keyEquivalent: "").target = self
+        }
+        settingsSub.addItem(.separator())
+        settingsSub.addItem(withTitle: L("全部恢复默认", "Reset All to Defaults"), action: #selector(resetSettings), keyEquivalent: "").target = self
+        settingsItem.submenu = settingsSub
         let iconItem = menu.addItem(withTitle: L("菜单栏图标", "Menu Bar Icon"), action: nil, keyEquivalent: "")
         let iconSub = NSMenu()
         for style in [IconStyle.line, .color, .dot, .custom] {
@@ -220,10 +273,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             statusItem.button?.appearsDisabled = !ok
         }
-        statusItem.button?.toolTip = ok ? L("CPAMP 运行中 (:18317)", "CPAMP running (:18317)")
-                                        : L("CPAMP 无响应 (:18317)", "CPAMP not responding (:18317)")
-        stateItem.title = ok ? L("CPAMP 运行中 · :18317", "CPAMP running · :18317")
-                             : L("CPAMP 无响应 · :18317", "CPAMP not responding · :18317")
+        let hp = hostPort(cpampBase)
+        statusItem.button?.toolTip = ok ? L("CPAMP 运行中 (\(hp))", "CPAMP running (\(hp))")
+                                        : L("CPAMP 无响应 (\(hp))", "CPAMP not responding (\(hp))")
+        stateItem.title = ok ? L("CPAMP 运行中 · \(hp)", "CPAMP running · \(hp)")
+                             : L("CPAMP 无响应 · \(hp)", "CPAMP not responding · \(hp)")
         autostartItem?.state = (SMAppService.mainApp.status == .enabled) ? .on : .off
         let currentStyle = IconStyle(rawValue: UserDefaults.standard.string(forKey: iconStyleKey) ?? "") ?? .line
         for (style, item) in iconStyleItems { item.state = (style == currentStyle) ? .on : .off }
@@ -305,10 +359,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             let find = shell("/usr/bin/find", ["/tmp/cpamp-update", "-name", "cpa-manager-plus", "-type", "f"])
             guard let bin = find.out.split(separator: "\n").first.map(String.init), !bin.isEmpty else { return fail(L("包内未找到二进制", "binary not found in archive")) }
             // 5. 停服 → 替换 → 起服
-            _ = shell("/bin/launchctl", ["unload", cpampPlist as String])
+            if !FileManager.default.fileExists(atPath: cpampDir) { return fail(L("安装目录不存在：", "install dir not found: ") + cpampDir) }
+            _ = shell("/bin/launchctl", ["unload", cpampPlist])
             _ = shell("/bin/cp", ["-f", bin, "\(cpampDir)/cpa-manager-plus"])
             _ = shell("/bin/chmod", ["+x", "\(cpampDir)/cpa-manager-plus"])
-            let load = shell("/bin/launchctl", ["load", cpampPlist as String])
+            let load = shell("/bin/launchctl", ["load", cpampPlist])
             DispatchQueue.main.async {
                 self.busy = false
                 if load.code == 0 {
@@ -322,6 +377,71 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     // MARK: 设置
+    /// 弹原生输入框；返回文本，取消返回 nil
+    func prompt(_ title: String, _ message: String, _ value: String) -> String? {
+        NSApp.activate(ignoringOtherApps: true)
+        let alert = NSAlert()
+        alert.messageText = title
+        alert.informativeText = message
+        alert.addButton(withTitle: L("保存", "Save"))
+        alert.addButton(withTitle: L("取消", "Cancel"))
+        let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 320, height: 24))
+        field.stringValue = value
+        alert.accessoryView = field
+        alert.window.initialFirstResponder = field
+        guard alert.runModal() == .alertFirstButtonReturn else { return nil }
+        return field.stringValue
+    }
+
+    func editURL(_ key: String, _ current: String) {
+        guard let raw = prompt(L("自定义地址", "Custom Address"),
+                               L("示例：http://127.0.0.1:18317  留空恢复默认", "e.g. http://127.0.0.1:18317 — leave empty for default"),
+                               current) else { return }
+        guard let base = normalizeBase(raw) else {
+            notify(L("地址无效：", "Invalid address: ") + raw)
+            return
+        }
+        UserDefaults.standard.set(base, forKey: key)
+        refresh()
+    }
+
+    func editText(_ key: String, _ current: String, _ title: String, _ hint: String) {
+        guard let raw = prompt(title, hint, current) else { return }
+        let v = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        if v.isEmpty {
+            UserDefaults.standard.removeObject(forKey: key)
+        } else {
+            UserDefaults.standard.set(v, forKey: key)
+        }
+        refresh()
+    }
+
+    @objc func editCpampBase() { editURL(kCpampBase, cpampBase) }
+    @objc func editCpaBase() { editURL(kCpaBase, cpaBase) }
+    @objc func editCpampDir() {
+        editText(kCpampDir, cpampDir, L("CPAMP 安装目录", "CPAMP Install Directory"),
+                 L("目录内有 cpa-manager-plus 与 logs/；留空恢复默认 ~/cpamp/cpamp",
+                   "Contains cpa-manager-plus and logs/ — leave empty for ~/cpamp/cpamp"))
+    }
+    @objc func editCpampLabel() {
+        editText(kCpampLabel, cpampLabel, L("CPAMP 服务 Label", "CPAMP Service Label"),
+                 L("对应 ~/Library/LaunchAgents/<label>.plist；留空恢复默认 \(defaultCpampLabel)",
+                   "Matches ~/Library/LaunchAgents/<label>.plist — leave empty for \(defaultCpampLabel)"))
+    }
+    @objc func editCpaLabel() {
+        editText(kCpaLabel, cpaLabel, L("CPA 服务 Label", "CPA Service Label"),
+                 L("brew 服务 label；留空恢复默认 \(defaultCpaLabel)",
+                   "brew service label — leave empty for \(defaultCpaLabel)"))
+    }
+
+    @objc func resetSettings() {
+        for k in [kCpampBase, kCpaBase, kCpampDir, kCpampLabel, kCpaLabel] {
+            UserDefaults.standard.removeObject(forKey: k)
+        }
+        refresh()
+        notify(L("已恢复默认设置", "Settings reset to defaults"))
+    }
+
     @objc func toggleAutostart() {
         do {
             if SMAppService.mainApp.status == .enabled {
