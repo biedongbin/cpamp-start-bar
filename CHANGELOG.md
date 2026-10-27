@@ -4,6 +4,17 @@ English | [简体中文](CHANGELOG.zh-CN.md)
 
 All notable changes to this project are documented here. Versions follow [SemVer](https://semver.org/).
 
+## [1.3.0] — 2026-10-27
+
+### Added
+- **Settings dialog (⌘,)**: one native dialog edits every configurable endpoint at once — CPAMP address, CPA address, CPAMP install dir, CPAMP service label, CPA service label. Leave a field empty to fall back to its default; **Reset Defaults** button clears all overrides.
+- **Custom CPAMP / CPA addresses**: the panel URLs and the 10 s `/health` probe now derive from a configurable base URL, so non-default local ports work without editing source. Input is normalized (`http://` optional, `/management.html` and trailing `/` stripped) and rejected if not a valid URL. Status line and tooltip show the live `host:port`.
+- All overrides persist in `UserDefaults`; defaults remain in the source constants.
+
+### Changed
+- `cpampPlist` / `logPath` now derive from the configurable install dir and service label.
+- One-click **Update CPAMP** checks the install directory exists before unloading the LaunchAgent, and reports it if missing.
+
 ## [1.2.0] — 2026-10-20
 
 ### Added

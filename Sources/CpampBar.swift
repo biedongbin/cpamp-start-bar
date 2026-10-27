@@ -190,21 +190,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // 开机自启 + 设置 + 图标 + 语言（顶层直达）
         autostartItem = menu.addItem(withTitle: L("开机自启", "Launch at Login"), action: #selector(toggleAutostart), keyEquivalent: "")
         autostartItem.target = self
-        let settingsItem = menu.addItem(withTitle: L("设置…", "Settings…"), action: nil, keyEquivalent: "")
-        let settingsSub = NSMenu()
-        let settings: [(String, Selector)] = [
-            (L("CPAMP 地址…", "CPAMP Address…"), #selector(editCpampBase)),
-            (L("CPA 地址…", "CPA Address…"), #selector(editCpaBase)),
-            (L("CPAMP 安装目录…", "CPAMP Install Dir…"), #selector(editCpampDir)),
-            (L("CPAMP 服务 Label…", "CPAMP Service Label…"), #selector(editCpampLabel)),
-            (L("CPA 服务 Label…", "CPA Service Label…"), #selector(editCpaLabel)),
-        ]
-        for (title, action) in settings {
-            settingsSub.addItem(withTitle: title, action: action, keyEquivalent: "").target = self
-        }
-        settingsSub.addItem(.separator())
-        settingsSub.addItem(withTitle: L("全部恢复默认", "Reset All to Defaults"), action: #selector(resetSettings), keyEquivalent: "").target = self
-        settingsItem.submenu = settingsSub
+        let settingsItem = menu.addItem(withTitle: L("设置…", "Settings…"), action: #selector(openSettings), keyEquivalent: ",")
+        settingsItem.target = self
         let iconItem = menu.addItem(withTitle: L("菜单栏图标", "Menu Bar Icon"), action: nil, keyEquivalent: "")
         let iconSub = NSMenu()
         for style in [IconStyle.line, .color, .dot, .custom] {
@@ -377,69 +364,92 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     // MARK: 设置
-    /// 弹原生输入框；返回文本，取消返回 nil
-    func prompt(_ title: String, _ message: String, _ value: String) -> String? {
+    /// 一次编辑全部可覆盖项。留空 = 该项恢复默认。
+    @objc func openSettings() {
         NSApp.activate(ignoringOtherApps: true)
+
+        let rows: [(String, String, String)] = [
+            (L("CPAMP 地址", "CPAMP Address"), cpampBase, defaultCpampBase),
+            (L("CPA 地址", "CPA Address"), cpaBase, defaultCpaBase),
+            (L("CPAMP 安装目录", "CPAMP Install Dir"), cpampDir, defaultCpampDir),
+            (L("CPAMP 服务 Label", "CPAMP Service Label"), cpampLabel, defaultCpampLabel),
+            (L("CPA 服务 Label", "CPA Service Label"), cpaLabel, defaultCpaLabel),
+        ]
+
+        let width: CGFloat = 560
+        let labelW: CGFloat = 130
+        let rowH: CGFloat = 30
+        let viewH = CGFloat(rows.count) * rowH + 8
+        let container = NSView(frame: NSRect(x: 0, y: 0, width: width, height: viewH))
+        var fields: [NSTextField] = []
+
+        for (i, row) in rows.enumerated() {
+            let y = viewH - CGFloat(i + 1) * rowH
+
+            let label = NSTextField(labelWithString: row.0)
+            label.frame = NSRect(x: 8, y: y + 4, width: labelW, height: 20)
+            label.alignment = .right
+            container.addSubview(label)
+
+            let field = NSTextField(frame: NSRect(x: 8 + labelW + 8, y: y + 2, width: width - labelW - 32, height: 24))
+            field.stringValue = row.1
+            field.placeholderString = L("默认：", "Default: ") + row.2
+            container.addSubview(field)
+            fields.append(field)
+        }
+
         let alert = NSAlert()
-        alert.messageText = title
-        alert.informativeText = message
+        alert.messageText = L("设置", "Settings")
+        alert.informativeText = L("留空即恢复该项默认值。地址可省略 http://，支持自定义端口。",
+                                  "Leave a field empty to use its default. Scheme http:// may be omitted; custom ports supported.")
         alert.addButton(withTitle: L("保存", "Save"))
         alert.addButton(withTitle: L("取消", "Cancel"))
-        let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 320, height: 24))
-        field.stringValue = value
-        alert.accessoryView = field
-        alert.window.initialFirstResponder = field
-        guard alert.runModal() == .alertFirstButtonReturn else { return nil }
-        return field.stringValue
-    }
+        alert.addButton(withTitle: L("恢复默认", "Reset Defaults"))
+        alert.accessoryView = container
+        alert.window.initialFirstResponder = fields.first
 
-    func editURL(_ key: String, _ current: String) {
-        guard let raw = prompt(L("自定义地址", "Custom Address"),
-                               L("示例：http://127.0.0.1:18317  留空恢复默认", "e.g. http://127.0.0.1:18317 — leave empty for default"),
-                               current) else { return }
-        guard let base = normalizeBase(raw) else {
-            notify(L("地址无效：", "Invalid address: ") + raw)
+        let response = alert.runModal()
+
+        if response == .alertThirdButtonReturn {   // 恢复默认
+            for k in [kCpampBase, kCpaBase, kCpampDir, kCpampLabel, kCpaLabel] {
+                UserDefaults.standard.removeObject(forKey: k)
+            }
+            refresh()
+            notify(L("已恢复默认设置", "Settings reset to defaults"))
             return
         }
-        UserDefaults.standard.set(base, forKey: key)
+        guard response == .alertFirstButtonReturn else { return }
+
+        let values = fields.map { $0.stringValue.trimmingCharacters(in: .whitespacesAndNewlines) }
+
+        // 地址先校验全部，任一非法则整体不保存
+        var bases: [String?] = []
+        for idx in [0, 1] {
+            let v = values[idx]
+            if v.isEmpty {
+                bases.append(nil)
+            } else if let b = normalizeBase(v) {
+                bases.append(b)
+            } else {
+                notify(L("地址无效：", "Invalid address: ") + v)
+                return
+            }
+        }
+        applySetting(kCpampBase, bases[0])
+        applySetting(kCpaBase, bases[1])
+        applySetting(kCpampDir, values[2].isEmpty ? nil : values[2])
+        applySetting(kCpampLabel, values[3].isEmpty ? nil : values[3])
+        applySetting(kCpaLabel, values[4].isEmpty ? nil : values[4])
         refresh()
     }
 
-    func editText(_ key: String, _ current: String, _ title: String, _ hint: String) {
-        guard let raw = prompt(title, hint, current) else { return }
-        let v = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        if v.isEmpty {
-            UserDefaults.standard.removeObject(forKey: key)
-        } else {
+    /// nil 或空 → 删除覆盖，回落默认
+    func applySetting(_ key: String, _ value: String?) {
+        if let v = value, !v.isEmpty {
             UserDefaults.standard.set(v, forKey: key)
+        } else {
+            UserDefaults.standard.removeObject(forKey: key)
         }
-        refresh()
-    }
-
-    @objc func editCpampBase() { editURL(kCpampBase, cpampBase) }
-    @objc func editCpaBase() { editURL(kCpaBase, cpaBase) }
-    @objc func editCpampDir() {
-        editText(kCpampDir, cpampDir, L("CPAMP 安装目录", "CPAMP Install Directory"),
-                 L("目录内有 cpa-manager-plus 与 logs/；留空恢复默认 ~/cpamp/cpamp",
-                   "Contains cpa-manager-plus and logs/ — leave empty for ~/cpamp/cpamp"))
-    }
-    @objc func editCpampLabel() {
-        editText(kCpampLabel, cpampLabel, L("CPAMP 服务 Label", "CPAMP Service Label"),
-                 L("对应 ~/Library/LaunchAgents/<label>.plist；留空恢复默认 \(defaultCpampLabel)",
-                   "Matches ~/Library/LaunchAgents/<label>.plist — leave empty for \(defaultCpampLabel)"))
-    }
-    @objc func editCpaLabel() {
-        editText(kCpaLabel, cpaLabel, L("CPA 服务 Label", "CPA Service Label"),
-                 L("brew 服务 label；留空恢复默认 \(defaultCpaLabel)",
-                   "brew service label — leave empty for \(defaultCpaLabel)"))
-    }
-
-    @objc func resetSettings() {
-        for k in [kCpampBase, kCpaBase, kCpampDir, kCpampLabel, kCpaLabel] {
-            UserDefaults.standard.removeObject(forKey: k)
-        }
-        refresh()
-        notify(L("已恢复默认设置", "Settings reset to defaults"))
     }
 
     @objc func toggleAutostart() {
